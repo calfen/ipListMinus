@@ -8,6 +8,7 @@ import xlrd
 import sys
 import pydoc
 import copy
+import unittest
 #from IPy import IP,IPSet
 #from _ast import If
 #from pickle import TRUE
@@ -33,6 +34,53 @@ def checkip(ip):
 		pass
 	raise ValueError('%s is not a valid IP address' % ip)
 '''
+'''
+
+'''
+
+class Ip(object):
+	def __init__(self, ipString):
+		self._ipString = ipString
+		
+	def stringToIpSet(self):
+		'''
+		判断一个ip地址合法
+		@author: calfen
+		'''
+		try:
+			if self._ipString.find('-') == -1:
+				return [ipaddress.ip_network(self._ipString)]
+			else:
+				ipList = self._ipString.split('-')
+				assert len(ipList) == 2, '不是两段地址'
+				startIp = ipList[0]
+				endIp = ipList[1]
+				return list(ipaddress.summarize_address_range(ipaddress.IPv4Address(startIp),ipaddress.IPv4Address(endIp)))	
+		except ValueError as e:
+			print(self._ipString,'地址不合法')
+# 			raise ValueError('%s 地址不合法' %self._ipString)
+
+			return None
+			sys.exit(1)
+# 			print(self._ipString,'地址不合法')
+# 			print(e)
+# 			return False
+		
+class test_Ip(unittest.TestCase):
+	def test_init(self):
+		ipTest = Ip('192.168.1.0/16')
+		self.assertEqual(ipTest.stringToIpSet(), None)
+# 		with self.assertRaises(ValueError):
+# 			ipTest.stringToIpSet()
+		
+		ipTest = Ip('192.168.1.0/24')
+# 		print(ipTest.stringToIpSet())
+		self.assertEqual(ipTest.stringToIpSet(),[ipaddress.ip_network('192.168.1.0/24')])
+		ipTestRange = Ip('192.168.1.0-192.168.1.255')
+# 		print(ipTestRange.stringToIpSet())
+		self.assertEqual(ipTestRange.stringToIpSet(), [ipaddress.ip_network('192.168.0.0/16')])
+#  		
+# 	
 '''
 判断一
 '''
@@ -325,8 +373,8 @@ def doWork(fileName):
 
 
 
-fileName = str(sys.argv[1])
-# fileName = '/Users/zhoujiangang/Downloads/test.xlsx'
-# print('文件名：',fileName)
-doWork(fileName)
-# printGoogleAdsense()
+# fileName = str(sys.argv[1])
+# # fileName = '/Users/zhoujiangang/Downloads/test.xlsx'
+# # print('文件名：',fileName)
+# doWork(fileName)
+# # printGoogleAdsense()
