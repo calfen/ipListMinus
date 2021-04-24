@@ -41,7 +41,7 @@ def checkip(ip):
 class Ip(object):
 	def __init__(self, ipString):
 		self._ipString = ipString
-		
+
 	def stringToIpSet(self):
 		'''
 		判断一个ip地址合法
@@ -55,7 +55,7 @@ class Ip(object):
 				assert len(ipList) == 2, '不是两段地址'
 				startIp = ipList[0]
 				endIp = ipList[1]
-				return list(ipaddress.summarize_address_range(ipaddress.IPv4Address(startIp),ipaddress.IPv4Address(endIp)))	
+				return list(ipaddress.summarize_address_range(ipaddress.IPv4Address(startIp),ipaddress.IPv4Address(endIp)))
 		except ValueError as e:
 			print(self._ipString,'地址不合法')
 # 			raise ValueError('%s 地址不合法' %self._ipString)
@@ -65,22 +65,24 @@ class Ip(object):
 # 			print(self._ipString,'地址不合法')
 # 			print(e)
 # 			return False
-		
+
 class test_Ip(unittest.TestCase):
 	def test_init(self):
 		ipTest = Ip('192.168.1.0/16')
 		self.assertEqual(ipTest.stringToIpSet(), None)
 # 		with self.assertRaises(ValueError):
 # 			ipTest.stringToIpSet()
-		
+
 		ipTest = Ip('192.168.1.0/24')
 # 		print(ipTest.stringToIpSet())
 		self.assertEqual(ipTest.stringToIpSet(),[ipaddress.ip_network('192.168.1.0/24')])
 		ipTestRange = Ip('192.168.1.0-192.168.1.255')
 # 		print(ipTestRange.stringToIpSet())
-		self.assertEqual(ipTestRange.stringToIpSet(), [ipaddress.ip_network('192.168.0.0/16')])
-#  		
-# 	
+		self.assertEqual(ipTestRange.stringToIpSet(), [ipaddress.ip_network('192.168.1.0/24')])
+
+
+#
+#
 '''
 判断一
 '''
@@ -299,7 +301,7 @@ def findIndexOf2DimensionalList(netAddress,twoDimensionalNetAddressList):
 	'''
 	找出字符串在二维数组里的第一维度位置
 	找到返回位置，找不到返回-1
-	
+
 	'''
 	for index in range(len(twoDimensionalNetAddressList)):
 		if netAddress in twoDimensionalNetAddressList[index]:
@@ -310,7 +312,7 @@ def printNetIndexAndValue(netAddressList,twoDimensionalList,strList):
 	'''
 	打印分支冲突IP
 
-	
+
 	'''
 	colum = set()
 	for netAddress in netAddressList:
