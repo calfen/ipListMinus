@@ -14,7 +14,7 @@ import unittest
 
 
 class IpList(object):
-
+    
     def __init__(self):
         pass
 
@@ -27,8 +27,6 @@ class IpList(object):
 
     @ipList.setter
     def ipList(self, inString):
-        print(inString)
-        print('1')
         self.__ipStringList = inString.split('-')
         if self.is_legal:
             if len(self.__ipStringList) == 1:
@@ -50,18 +48,18 @@ class IpList(object):
         startIp, endIp = __ipList[0][0], __ipList[0][-1]
         __ipStringList = []
         for i in range(len(__ipList) - 1):
-            if __ipList[i+1][0] == endIp + 1:
-                endIp = __ipList[i+1][-1]
+            if __ipList[i + 1][0] == endIp + 1:
+                endIp = __ipList[i + 1][-1]
             else:
                 __ipStringList.add(str(startIp) + '-' + str(endIp))
-                startIp, endIp = __ipList[i+1][0], __ipList[i+1][-1]
+                startIp, endIp = __ipList[i + 1][0], __ipList[i + 1][-1]
         __ipStringList.append(str(startIp) + '-' + str(endIp))
         return __ipStringList
 
     @property
     def is_legal(self):
         try:
-            assert len(self.__ipStringList) <= 2,  '地址不合法'
+            assert len(self.__ipStringList) <= 2, '地址不合法'
             if len(self.__ipStringList) == 1:
                 ipaddress.ip_network(self.__ipStringList[0])
             else:
@@ -71,25 +69,69 @@ class IpList(object):
         except ValueError:
             return False
 
-    def overlaps(self, other):
-        return 0
-        return 1
-        return -1
-        pass
-
+    def is_overlaps(self, other):
+        __sign = False
+        for ipNet1 in self.ipList:
+            for ipNet2 in other.ipList:
+                if ipNet1.overlaps(ipNet2):
+                    __sign = True
+        return __sign
+    
+    def findOverlaps(self, other):
+            ipNetList = []
+            ipListOverlaps = IpList()
+            for ipNet1 in self.ipList:
+                for ipNet2 in other.ipList:
+                    if ipNet1.subnet_of(ipNet2):
+                        ipNetList.append(ipNet1)
+                    elif ipNet1.supernet_of(ipNet2):
+                        ipNetList.append(ipNet2)
+            ipListOverlaps._ipList = ipNetList
+            return ipListOverlaps
+                    
     def __add__(self, other):
         # print(self.ipList)
         IpList._ipList = [ipAddr for ipAddr in ipaddress.collapse_addresses(
             self.ipList + other.ipList)]
         return IpList()
 
-    def minus(self, other):
-        pass
+    def __sub__(self,other):
+        def minusListNet(listNetA,listNetB):
+            '''
+            两个网络list相减，直到没有重复
+            返回[相减后的网络list，用于递归
+            '''    
+            for netA in listNetA:
+                for netB in listNetB:
+                    if netA.overlaps(netB):
+                        overlapsSign = 1
+                        if netA.supernet_of(netB):
+                            resultNetList = list(netA.address_exclude(netB))
+                            listNetA.remove(netA)
+                            listNetA = listNetA + resultNetList
+                        elif netA.subnet_of(netB):
+                            listNetA.remove(netA)
+                        return [listNetA,1,netB]
+            return [listNetA,0,None]
+        
+        __listNetA = self.ipList
+        __listNetB = other.ipList
+        sign = 1
+        minusList = []
+        while sign != 0:
+            i = minusListNet(__listNetA,__listNetB)
+            sign = i[1]
+            __listNetA = i[0]
+            if i[2] != None:
+                minusList.append(i[2])
+        returnIpList = IpList()
+        returnIpList._ipList = __listNetA
+        return returnIpList
 
 
 class test_IpList(unittest.TestCase):
 
-    ipTest = [IpList() for i in range(10)]
+    ipTest = [IpList() for i in range(20)]
     ipTest[0].ipList = '192.168.1.0/16'
     ipTest[1].ipList = '192.168.0.0/16'
     ipTest[2].ipList = '192.168.1.0/24'
@@ -100,6 +142,8 @@ class test_IpList(unittest.TestCase):
                      '192.168.1.144/29', '192.168.1.152/30']
     ipTest[6].ipList = '192.168.2.0-192.168.2.255'
     ipTest[7].ipList = '192.168.1.0-192.168.2.255'
+    ipTest[9].ipList = '192.168.1.64-192.168.1.255'
+    ipTest[10].ipList = '192.168.1.0-192.168.1.63'
 
     def test_is_legal(self):
         self.assertFalse(self.ipTest[0].is_legal)
@@ -126,3 +170,19 @@ class test_IpList(unittest.TestCase):
         self.ipTest[8] = self.ipTest[4] + self.ipTest[6]
         self.assertEqual(self.ipTest[8].startEndFormat,
                          ['192.168.1.0-192.168.2.255'])
+        
+    def test__is_overlaps(self):
+        self.assertTrue(self.ipTest[6].is_overlaps(self.ipTest[7]))
+        self.assertTrue(self.ipTest[7].is_overlaps(self.ipTest[6]))
+        self.assertFalse(self.ipTest[4].is_overlaps(self.ipTest[6]))
+
+    def test_findOverlaps(self):
+        self.assertEqual(self.ipTest[7].findOverlaps(self.ipTest[6]),self.ipTest[6])
+        
+    def test_sub(self):
+        self.assertEqual(self.ipTest[7] - self.ipTest[6],self.ipTest[4])
+        self.assertEqual((self.ipTest[5] - self.ipTest[9]).ipList,self.ipTest[10].ipList)
+        print((self.ipTest[5] - self.ipTest[9]).ipList)
+        print(self.ipTest[10].ipList)
+        print((self.ipTest[5] - self.ipTest[9]).ipList)
+        print(self.ipTest[5].ipList)

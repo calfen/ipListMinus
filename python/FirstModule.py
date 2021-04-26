@@ -34,9 +34,7 @@ def checkip(ip):
 		pass
 	raise ValueError('%s is not a valid IP address' % ip)
 '''
-'''
 
-'''
 
 class Ip(object):
 	def __init__(self, ipString):
@@ -227,7 +225,7 @@ def minusListNet(listNetA,listNetB):
                     resultNetList = list(netA.address_exclude(netB))
                     listNetA.remove(netA)
                     listNetA = listNetA + resultNetList
-                else:
+                elif netA.subnet_of(netB):
                     listNetA.remove(netA)
                 return [listNetA,1,netB]
                 # print('重叠等于')
